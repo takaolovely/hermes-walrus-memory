@@ -123,8 +123,17 @@ class WalrusClient:
         return seed
 
     def _signed_headers(self, method: str, path: str, body_str: str) -> Dict[str, str]:
-        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-        from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+        # Imported here so a Hermes install without the `cryptography` package
+        # still loads the plugin and works in zero-config mode. Only the Walrus
+        # network layer needs Ed25519, and it says so plainly when it cannot.
+        try:
+            from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+            from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+        except ImportError as exc:
+            raise WalrusError(
+                "the 'cryptography' package is required to sign Walrus requests "
+                "(pip install cryptography). The local ledger works without it."
+            ) from exc
         import time
         import uuid as _uuid
 

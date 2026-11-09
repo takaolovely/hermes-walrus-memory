@@ -1,0 +1,14 @@
+# Development dependencies for hermes-walrus-memory.
+#
+# The plugin itself needs nothing but the Python standard library. Install this
+# only to run the test suite or to talk to Walrus Mainnet.
+#
+#   pip install -r requirements-dev.txt
+#   python -m pytest plugin/tests -q
+#   python tools/load_check.py
+
+pytest>=7.0
+
+# Ed25519 request signing for the Walrus relay. Not needed for zero-config use;
+# the plugin degrades with a clear message when it is absent.
+cryptography>=41.0

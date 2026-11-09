@@ -203,9 +203,26 @@ installing or removing the plugin never changes how Hermes already remembers.
 
 ## Tests
 
+The plugin itself has no third-party dependency, so `load_check.py` runs on a
+bare Python install:
+
 ```bash
-python -m pytest plugin/tests -q      # 73 tests, all offline
 python tools/load_check.py            # registers the plugin and drives every tool
+```
+
+The suite needs pytest. One install covers both, and the `cryptography` package
+is only used by the Walrus network layer:
+
+```bash
+pip install -r requirements-dev.txt
+python -m pytest plugin/tests -q      # 93 tests, all offline
+```
+
+Live relay tests are skipped unless credentials are present:
+
+```bash
+WALRUS_LIVE=1 WALRUS_DELEGATE_KEY=... WALRUS_ACCOUNT_ID=... \
+  python -m pytest plugin/tests/test_live_relay.py -q
 ```
 
 Every test writes to a temporary directory through `tmp_path` and
