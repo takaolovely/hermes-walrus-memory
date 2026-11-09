@@ -81,11 +81,16 @@ line does not create a duplicate.
 ## Install
 
 ```bash
-hermes plugins install <this-repo>
+hermes plugins install https://github.com/takaolovely/hermes-walrus-memory
 hermes tools enable walrus_memory
 ```
 
 Then ask the agent to remember something, correct it, and ask again.
+
+That is the whole setup for the default mode. There is nothing to `pip install`:
+the ledger, the hash chain and all seven tools run on the Python standard library
+alone. `cryptography` is imported lazily and only when Walrus credentials are
+present, so Mode 2 needs `pip install cryptography` while Mode 1 does not.
 
 ## How integrity works
 
