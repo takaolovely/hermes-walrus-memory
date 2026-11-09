@@ -1,0 +1,24 @@
+name: hermes-walrus-memory
+version: 0.1.0
+description: "Append-only memory with temporal provenance and hash-chain integrity. Corrections are appended next to the original instead of overwriting it, recall returns line citations, and with Walrus credentials every line is also stored on Walrus Mainnet. Works with zero configuration as a local tamper-evident ledger."
+author: Ar1Ma
+kind: backend
+provides_tools:
+  - memory_observe
+  - memory_correct
+  - memory_recall_cited
+  - memory_provenance_diff
+  - walrus_sync
+  - walrus_verify
+  - memory_import
+requires_env: []
+optional_env:
+  - WALRUS_DELEGATE_KEY
+  - WALRUS_ACCOUNT_ID
+  - WALRUS_NAMESPACE
+  - WALRUS_SEAL_SESSION
+  - WALRUS_SEAL_BRIDGE
+  - WALRUS_SEAL_SDK_ROOT
+  - MEMWAL_SERVER_URL
+  - WALRUS_LEDGER_PATH
+  - HERMES_MEMORY_MD
