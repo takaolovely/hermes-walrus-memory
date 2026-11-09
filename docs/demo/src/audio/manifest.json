@@ -1,0 +1,40 @@
+{
+  "scene1": {
+    "duration": 8.28,
+    "frames": 485,
+    "fps": 60,
+    "pad": -0.2
+  },
+  "scene2": {
+    "duration": 13.392,
+    "frames": 840,
+    "fps": 60,
+    "pad": 0.6
+  },
+  "scene3": {
+    "duration": 8.088,
+    "frames": 521,
+    "fps": 60,
+    "pad": 0.6
+  },
+  "scene4": {
+    "duration": 11.256,
+    "frames": 711,
+    "fps": 60,
+    "pad": 0.6
+  },
+  "scene5": {
+    "duration": 15.48,
+    "frames": 983,
+    "fps": 60,
+    "pad": 0.9
+  },
+  "scene6": {
+    "duration": 7.344,
+    "frames": 513,
+    "fps": 60,
+    "pad": 1.2
+  },
+  "_total_seconds": 67.55,
+  "_total_frames": 4053
+}

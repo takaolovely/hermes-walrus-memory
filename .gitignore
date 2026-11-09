@@ -31,3 +31,5 @@ package-lock.json
 .DS_Store
 .idea/
 .vscode/
+# Remotion demo build artifacts
+docs/demo/node_modules/
