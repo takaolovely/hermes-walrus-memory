@@ -1,8 +1,12 @@
 name: hermes-walrus-memory
 title: Walrus Memory
 repo: https://github.com/takaolovely/hermes-walrus-memory
-sha: PLACEHOLDER_SHA_FILLED_AT_PR_TIME
+sha: fd2e4e948c1b7095177530870bcb775e150f00d8
 version: "0.2.0"
+requires_hermes: ">=0.16"
+maintainer: takaolovely
+tier: community
+category: memory
 description: >-
   Append-only memory where a correction never rewrites what the agent used to believe.
   Facts are ledger lines (obs, fix, rule), so Hermes can always answer what it thought
@@ -20,9 +24,6 @@ description: >-
   Without credentials nothing leaves the machine. Reading sealed blobs back requires a
   SEAL session, supplied through WALRUS_SEAL_SESSION or an optional WALRUS_SEAL_BRIDGE
   command; nothing is pulled or decrypted without one.
-maintainer: takaolovely
-tier: community
-category: memory
 docs_url: https://github.com/takaolovely/hermes-walrus-memory#readme
 homepage_url: https://github.com/takaolovely/hermes-walrus-memory
 readme: true
