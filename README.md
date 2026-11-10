@@ -35,8 +35,9 @@ rule#04 <- fix#03 <- fix#02 <- obs#01
 
 ## Demo (67 seconds)
 
-<!-- Replace the link below with the X post after upload. -->
-Watch the walkthrough: **X post link goes here after upload**
+<!-- X post: https://x.com/groziez/status/2120044862493884583 -->
+▶ **[Watch the demo on X](https://x.com/groziez/status/2120044862493884583)**
+or open [`docs/demo.mp4`](docs/demo.mp4) directly.
 
 The demo covers the full lifecycle: how a standard `MEMORY.md` overwrites erase history, how hermes-walrus-memory appends `obs` then `fix` then `rule` lines with exact citations, how `walrus_verify` catches a manual `sed -i` disk tamper at the exact broken line (`fix#02`), and how Walrus Mainnet with Mysten SEAL enforces privacy by default: `degraded: true` without a SEAL session versus `dropped: 0` with an active one.
 
