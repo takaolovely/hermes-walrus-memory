@@ -130,10 +130,10 @@ github.com/takaolovely/hermes-walrus-memory
 7 tools   memory_observe  memory_correct  memory_recall_cited
           memory_provenance_diff  memory_import  walrus_sync  walrus_verify
 
-93 tests passing      works with zero configuration
+99 tests passing      works with zero configuration
 ```
 
-**VO:** "Seven tools, ninety-three tests, no keys required. Install it, and your
+**VO:** "Seven tools, ninety-nine tests, no keys required. Install it, and your
 agent stops forgetting what it used to believe."
 
 ---

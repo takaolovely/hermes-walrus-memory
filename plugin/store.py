@@ -7,7 +7,10 @@ can never cost a memory line.
 
 from __future__ import annotations
 
-import fcntl
+try:  # POSIX file locking. Absent on Windows, where _lock is a no-op.
+    import fcntl
+except ImportError:  # pragma: no cover - Windows only
+    fcntl = None  # type: ignore[assignment]
 import os
 from pathlib import Path
 from typing import List, Optional
@@ -16,17 +19,49 @@ from . import ledger
 
 DEFAULT_FILENAME = "walrus-memory.log"
 ENV_LEDGER_PATH = "WALRUS_LEDGER_PATH"
+PLUGIN_DATA_DIR = "plugin-data"
+PLUGIN_SLUG = "hermes-walrus-memory"
+
+
+def hermes_home() -> Path:
+    """Hermes home directory, preferring the loader's own resolver.
+
+    ``hermes_cli.config.get_hermes_home`` is the authoritative answer inside a
+    running Hermes. Imported lazily so this plugin still loads in a bare
+    interpreter (tests, the load_check script) without hermes-agent installed.
+    """
+    try:
+        from hermes_cli.config import get_hermes_home  # type: ignore[import-not-found]
+
+        return Path(get_hermes_home()).expanduser()
+    except Exception:  # noqa: BLE001 - any failure falls back to the env var
+        return Path(os.environ.get("HERMES_HOME") or (Path.home() / ".hermes")).expanduser()
+
+
+def ledger_root() -> Path:
+    """The only directory a ledger may live in."""
+    return (hermes_home() / PLUGIN_DATA_DIR / PLUGIN_SLUG).resolve()
 
 
 def resolve_path(explicit: Optional[str] = None) -> Path:
-    """Ledger location, in precedence order: explicit arg, env var, HERMES_HOME."""
-    if explicit:
-        return Path(explicit).expanduser()
-    env = os.environ.get(ENV_LEDGER_PATH)
-    if env:
-        return Path(env).expanduser()
-    home = os.environ.get("HERMES_HOME") or str(Path.home() / ".hermes")
-    return Path(home).expanduser() / DEFAULT_FILENAME
+    """Ledger location, confined to Hermes home.
+
+    Precedence: explicit arg, ``WALRUS_LEDGER_PATH``, then the plugin data dir.
+    Every candidate is resolved and rejected unless it sits inside
+    ``<hermes_home>/plugin-data/hermes-walrus-memory/``. Without this check a
+    caller could point the ledger at any file on disk and the append would
+    write through it.
+    """
+    root = ledger_root()
+    candidate = explicit or os.environ.get(ENV_LEDGER_PATH)
+    target = Path(candidate).expanduser().resolve() if candidate else (root / DEFAULT_FILENAME)
+    try:
+        target.relative_to(root)
+    except ValueError:
+        raise ValueError(
+            f"ledger path must stay inside {root}; refusing to touch {target}"
+        ) from None
+    return target
 
 
 class LedgerStore:
@@ -56,13 +91,15 @@ class LedgerStore:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         line = record.encode() + "\n"
         with self.path.open("a+", encoding="utf-8") as fh:
-            fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
+            if fcntl is not None:
+                fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
             try:
                 fh.write(line)
                 fh.flush()
                 os.fsync(fh.fileno())
             finally:
-                fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
+                if fcntl is not None:
+                    fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
         return record
 
     def next_position(self) -> tuple[int, str]:

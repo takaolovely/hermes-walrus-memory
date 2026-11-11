@@ -23,7 +23,14 @@ NAMESPACE = "hermes-walrus-memory"  # default; see walrus.namespace() for the re
 
 
 def _store(path: Optional[str] = None) -> store.LedgerStore:
-    return store.LedgerStore(path or os.environ.get("WALRUS_LEDGER_PATH"))
+    """Open the ledger. No tool handler may choose the path.
+
+    ``path`` exists only so tests and the load_check script can point at a
+    scratch file. Handlers call this with no argument, so the location always
+    comes from config (``WALRUS_LEDGER_PATH``) and is confined by
+    ``store.resolve_path`` to the plugin data directory.
+    """
+    return store.LedgerStore(path)
 
 
 def _client() -> Optional[walrus.WalrusClient]:
@@ -99,12 +106,12 @@ def _write(store_obj: store.LedgerStore, kind: str, fields: Dict[str, Any]) -> D
 # -- 1. observe ------------------------------------------------------------
 
 
-def memory_observe(fact: str, topic: str = "", source: str = "", ledger_path: Optional[str] = None) -> str:
+def memory_observe(fact: str, topic: str = "", source: str = "") -> str:
     text = ledger.clean(fact, 400)
     if not text:
         return _err("fact is empty")
     topic = ledger.clean(topic, 80) or ledger.clean(text.split(" ")[0], 40)
-    store_obj = _store(ledger_path)
+    store_obj = _store()
     fact_id = f"obs-{memory_mod.stable_topic_key(topic)}-{uuid.uuid4().hex[:4]}"
     fields = {
         "id": fact_id,
@@ -141,12 +148,11 @@ def memory_correct(
     correction: str,
     reason: str = "",
     rule: str = "",
-    ledger_path: Optional[str] = None,
 ) -> str:
     text = ledger.clean(correction, 400)
     if not text:
         return _err("correction is empty")
-    store_obj = _store(ledger_path)
+    store_obj = _store()
     mem = memory_mod.Memory(store_obj.read_records())
     fact = mem.get(fact_id)
     if fact is None:
@@ -207,8 +213,8 @@ def memory_correct(
 # -- 3. recall with citations ---------------------------------------------
 
 
-def memory_recall_cited(query: str, limit: int = 5, ledger_path: Optional[str] = None) -> str:
-    store_obj = _store(ledger_path)
+def memory_recall_cited(query: str, limit: int = 5) -> str:
+    store_obj = _store()
     mem = memory_mod.Memory(store_obj.read_records())
     if not mem.facts():
         return _ok(query=query, results=[], note="ledger is empty")
@@ -223,8 +229,8 @@ def memory_recall_cited(query: str, limit: int = 5, ledger_path: Optional[str] =
 # -- 4. provenance diff ----------------------------------------------------
 
 
-def memory_provenance_diff(fact_id: str = "", topic: str = "", ledger_path: Optional[str] = None) -> str:
-    store_obj = _store(ledger_path)
+def memory_provenance_diff(fact_id: str = "", topic: str = "") -> str:
+    store_obj = _store()
     mem = memory_mod.Memory(store_obj.read_records())
 
     if fact_id:
@@ -263,16 +269,33 @@ def memory_provenance_diff(fact_id: str = "", topic: str = "", ledger_path: Opti
 
 MEMORY_MD_ENV = "HERMES_MEMORY_MD"
 DEFAULT_MEMORY_MD = "MEMORY.md"
+MEMORIES_DIR = "memories"
 
 
-def _memory_md_path(explicit: Optional[str] = None) -> Path:
-    if explicit:
-        return Path(explicit).expanduser()
+def memories_root() -> Path:
+    """The only directory ``memory_import`` may read from."""
+    return (store.hermes_home() / MEMORIES_DIR).resolve()
+
+
+def _memory_md_path() -> Path:
+    """Resolve the memory file, confined to the profile's memories folder.
+
+    The model cannot steer this. Earlier the handler took a ``path`` argument
+    and mirrored whatever file it named to the relay, which is both an
+    arbitrary-file-read and a data-exfiltration path. Now the location is
+    config only, and ``HERMES_MEMORY_MD`` is itself rejected unless it resolves
+    inside ``<hermes_home>/memories/``.
+    """
+    root = memories_root()
     env = os.environ.get(MEMORY_MD_ENV)
-    if env:
-        return Path(env).expanduser()
-    home = os.environ.get("HERMES_HOME") or str(Path.home() / ".hermes")
-    return Path(home).expanduser() / DEFAULT_MEMORY_MD
+    target = Path(env).expanduser().resolve() if env else (root / DEFAULT_MEMORY_MD)
+    try:
+        target.relative_to(root)
+    except ValueError:
+        raise ValueError(
+            f"memory file must stay inside {root}; refusing to read {target}"
+        ) from None
+    return target
 
 
 _ENTRY_SPLIT = re.compile(r"\n\s*§\s*\n")
@@ -303,18 +326,21 @@ def parse_memory_md(text: str) -> List[Dict[str, str]]:
 
 
 def memory_import(
-    path: str = "",
     topic_prefix: str = "memory_md",
     dry_run: bool = False,
-    ledger_path: Optional[str] = None,
 ) -> str:
     """Mirror built-in MEMORY.md entries into the ledger as obs lines.
+
+    The source is always ``<hermes_home>/memories/MEMORY.md``. There is no
+    path argument on purpose: this handler mirrors what it reads to the relay
+    when credentials are set, so a caller-chosen path would be an
+    arbitrary-file-read with an exfiltration route attached.
 
     Read-only on the source file, idempotent on the ledger: rerunning it on an
     unchanged MEMORY.md imports nothing. Facts are compared on normalised text,
     so a re-formatted-but-identical entry is still a skip.
     """
-    source = _memory_md_path(path or None)
+    source = _memory_md_path()
     if not source.exists():
         return _err(f"memory file not found: {source}", imported=0, skipped_existing=0)
 
@@ -325,7 +351,7 @@ def memory_import(
         return _err(f"cannot read {source}: {exc}", imported=0, skipped_existing=0)
 
     entries = parse_memory_md(raw)
-    store_obj = _store(ledger_path)
+    store_obj = _store()
     mem = memory_mod.Memory(store_obj.read_records())
     existing = {_entry_key(f.original_text) for f in mem.facts()}
 
@@ -347,7 +373,6 @@ def memory_import(
                 fact=entry["text"],
                 topic=f"{topic_prefix}:{entry['topic']}"[:80],
                 source="memory_md",
-                ledger_path=ledger_path,
             )
         )
         if not observe_payload.get("ok"):
@@ -379,10 +404,10 @@ def _entry_key(text: str) -> str:
 # -- 5. sync ---------------------------------------------------------------
 
 
-def walrus_sync(action: str = "push", ledger_path: Optional[str] = None) -> str:
+def walrus_sync(action: str = "push") -> str:
     """push pending local lines to Walrus, or pull the Walrus snapshot into the
     local ledger. Pull never duplicates a record that is already local."""
-    store_obj = _store(ledger_path)
+    store_obj = _store()
     client = _client()
     if client is None:
         return _err(
@@ -475,8 +500,8 @@ def walrus_sync(action: str = "push", ledger_path: Optional[str] = None) -> str:
 # -- 6. verify -------------------------------------------------------------
 
 
-def walrus_verify(ledger_path: Optional[str] = None) -> str:
-    store_obj = _store(ledger_path)
+def walrus_verify() -> str:
+    store_obj = _store()
     result = store_obj.verify()
     configured = walrus.is_configured()
     mode = "walrus" if configured else "local"

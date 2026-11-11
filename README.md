@@ -10,7 +10,7 @@ This plugin is not a drop-in replacement for everyday scratchpad memory. `~/.her
 
 - **Debugging agent belief drift.** Trace why Hermes believes a specific rule, which past correction taught it that rule, and what it believed beforehand: `rule#04 <- fix#03 <- fix#02 <- obs#01`.
 - **Auditable decision and config trails.** Keep a tamper-evident SHA-256 hash-chained log of project rules, infrastructure changes, or operational constraints where silent overwrites are unacceptable.
-- **Encrypted cross-machine portability.** Sync durable project facts across a VPS and a local machine through Walrus Mainnet without exposing plaintext to a third-party cloud database. Blobs are sealed by default with Mysten SEAL.
+- **Encrypted cross-machine portability.** Sync durable project facts across a VPS and a local machine through Walrus Mainnet without exposing plaintext to a third-party cloud database. Blobs are sealed with Mysten SEAL at the relay, by default.
 
 If you only use Hermes for conversation, you do not need this. That is a fair reason to skip it.
 
@@ -55,7 +55,7 @@ Transport metadata (`sync=`, `walrus=`) sits in the line but is excluded from th
 
 ## Privacy by default
 
-With credentials set, every line is encrypted with Mysten SEAL before it leaves the machine. The relay indexes the memory so it can be found again, but it cannot return plaintext without an active seal session:
+With credentials set, every line is sealed with Mysten SEAL at the relay after it is transmitted over TLS. The line leaves this machine in plaintext inside the encrypted transport, and the relay seals it before writing to Walrus. The relay indexes the memory so it can be found again, but it cannot return plaintext without an active seal session:
 
 ```
 POST /api/recall  without x-seal-session
@@ -86,7 +86,7 @@ Every tool is wrapped at the boundary, so a bad argument or an unreachable relay
 ```bash
 python3 tools/load_check.py            # no install needed, runs the seven tools
 pip install -r requirements-dev.txt
-python -m pytest plugin/tests -q       # 93 passed, 2 skipped
+python -m pytest plugin/tests -q       # 99 passed, 2 skipped
 ```
 
 The two skipped tests need live Walrus credentials and are gated behind `WALRUS_LIVE=1`. Admission checks pass 15/15 with `hermes plugins validate`, including a capability probe that compares declared tools against what `register()` actually registers.

@@ -128,10 +128,16 @@ shape.
 
 ## Privacy by default: memory is sealed
 
-Every blob is encrypted with **Mysten SEAL** before it reaches Walrus. The relay
-indexes the vector so it can find a match, but it cannot return the plaintext
-without an `x-seal-session` credential. Ask for memory without one and the relay
-answers honestly:
+Every blob is encrypted with **Mysten SEAL** before it reaches Walrus, and the
+sealing happens at the relay, not on this machine. The write path POSTs the
+line over TLS to the Walrus Memory relay, which seals it and only then stores
+the blob. So the honest boundary is: the transport is encrypted, the stored
+blob is encrypted, and the plaintext exists in memory on the relay for the
+duration of that request. If that boundary matters to you, run your own relay.
+
+The relay indexes the vector so it can find a match, but it cannot return the
+plaintext without an `x-seal-session` credential. Ask for memory without one and
+the relay answers honestly:
 
 ```json
 {"results": [], "total": 0, "dropped_count": 4, "degraded": true}

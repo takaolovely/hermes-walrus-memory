@@ -20,7 +20,7 @@ from .schemas import (
     WALRUS_VERIFY_SCHEMA,
 )
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 _TOOLS = (
     ("memory_observe", MEMORY_OBSERVE_SCHEMA, tools.memory_observe, "🧠"),
@@ -43,14 +43,23 @@ def register(ctx) -> None:
     Every handler is wrapped in ``tools._guard``. A memory tool that raises into
     the agent loop breaks the conversation it was supposed to help, so failures
     come back as an ``ok: false`` result naming what went wrong.
+
+    Arguments are filtered to the keys the schema actually declares before they
+    reach a handler. The model supplies this dict, and forwarding it verbatim
+    would let an undeclared key (``ledger_path``, ``path``) steer a handler at a
+    file of its choosing.
     """
     for name, schema, handler, emoji in _TOOLS:
+        declared = frozenset(schema.get("parameters", {}).get("properties", {}))
+
+        def _call(args, _n=name, _h=handler, _declared=declared, **kw):
+            filtered = {k: v for k, v in (args or {}).items() if k in _declared}
+            return tools._guard(_n, _h, filtered)
+
         ctx.register_tool(
             name=name,
             toolset="walrus_memory",
             schema=schema,
-            handler=lambda args, _n=name, _h=handler, **kw: tools._guard(
-                _n, _h, {k: v for k, v in (args or {}).items()}
-            ),
+            handler=_call,
             emoji=emoji,
         )

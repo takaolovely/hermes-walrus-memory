@@ -166,17 +166,14 @@ MEMORY_IMPORT_SCHEMA = {
     "name": "memory_import",
     "description": (
         "Mirror the entries of the built-in Hermes MEMORY.md into this ledger, so existing memory "
-        "gains provenance and citations without being retyped. The source file is opened read-only "
-        "and never modified. Safe to rerun: entries already in the ledger are reported as "
-        "skipped_existing, so nothing is duplicated. Use dry_run first to preview."
+        "gains provenance and citations without being retyped. The source is always the profile's "
+        "own memory file (<hermes_home>/memories/MEMORY.md) and it is never modified. Safe to "
+        "rerun: entries already in the ledger are reported as skipped_existing, so nothing is "
+        "duplicated. Use dry_run first to preview."
     ),
     "parameters": {
         "type": "object",
         "properties": {
-            "path": {
-                "type": "string",
-                "description": "Path to the memory file. Omit to use HERMES_MEMORY_MD or ~/.hermes/MEMORY.md.",
-            },
             "topic_prefix": {
                 "type": "string",
                 "description": "Prefix added to every imported topic so mirrored facts group together. Defaults to 'memory_md'.",

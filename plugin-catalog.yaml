@@ -20,7 +20,9 @@ description: >-
   and sync across devices. Disclosure — when WALRUS_DELEGATE_KEY and WALRUS_ACCOUNT_ID
   are set, every memory line (facts, corrections and derived rules) is uploaded to the
   Walrus Memory relay (relayer.memory.walrus.xyz by default) under the configured
-  namespace, encrypted with Mysten SEAL before upload. Offline that is the whole payload:
+  namespace. Lines are sent over TLS and sealed with Mysten SEAL at the relay before
+  they are written to Walrus; the plaintext is not sealed on this machine. Offline
+  that is the whole payload:
   no telemetry, no other network calls, and nothing is written to ~/.hermes/MEMORY.md.
   Without credentials nothing leaves the machine. Reading sealed blobs back requires a
   SEAL session, supplied through WALRUS_SEAL_SESSION or an optional WALRUS_SEAL_BRIDGE
@@ -31,7 +33,6 @@ readme: true
 platforms:
   - linux
   - macos
-  - windows
 capabilities:
   provides_tools:
     - memory_observe

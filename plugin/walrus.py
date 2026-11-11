@@ -65,8 +65,54 @@ class SyncStatus:
     reason: str = ""
 
 
+def get_secret(name: str, default: Optional[str] = None) -> Optional[str]:
+    """Read one secret, preferring the agent's scoped store.
+
+    ``agent.secret_scope`` is where per-profile secrets live in Hermes, so a
+    credential scoped to profile ``work`` does not leak into profile ``default``
+    and vice versa. It is imported lazily and only as a fallback chain: when the
+    plugin runs in a bare interpreter (tests, load_check) the module is absent
+    and the environment is the only source that exists.
+
+    Never logs the value. Returns the secret string or ``default``.
+    """
+    try:
+        from agent import secret_scope  # type: ignore[import-not-found]
+
+        scoped = secret_scope.get_secret(name)
+        if scoped:
+            return scoped
+    except Exception:  # noqa: BLE001 - absent module, no active profile, etc.
+        pass
+    return os.environ.get(name, default)
+
+
 def credentials() -> tuple[Optional[str], Optional[str]]:
-    return os.environ.get(ENV_KEY), os.environ.get(ENV_ACCOUNT)
+    return get_secret(ENV_KEY), get_secret(ENV_ACCOUNT)
+
+
+# The bridge is a Node child process. It needs a handful of variables to run and
+# exactly the three Walrus settings to do its job. Inheriting the parent
+# environment would hand every provider key, token and API secret on the host
+# to a subprocess that never needed them.
+BRIDGE_ENV_ALLOWLIST = (
+    "PATH",
+    "HOME",
+    "LANG",
+    ENV_KEY,
+    "WALRUS_SEAL_SDK_ROOT",
+    ENV_RELAY,
+)
+
+
+def bridge_env() -> dict[str, str]:
+    """Minimal environment for the SEAL bridge child. Never ``os.environ``."""
+    out: dict[str, str] = {}
+    for name in BRIDGE_ENV_ALLOWLIST:
+        value = get_secret(name) if name in (ENV_KEY,) else os.environ.get(name)
+        if value:
+            out[name] = value
+    return out
 
 
 def is_configured() -> bool:
@@ -357,7 +403,7 @@ def seal_session(account_id: str, namespace: str, query: str = "obs") -> str:
             # Bounded like every other call: a bridge that hangs must cost a
             # degraded read, never a stuck tool call.
             timeout=float(os.environ.get("WALRUS_SEAL_BRIDGE_TIMEOUT", str(DEFAULT_SEAL_TIMEOUT))),
-            env={**os.environ},
+            env=bridge_env(),
             check=False,
         )
     except (subprocess.TimeoutExpired, OSError):

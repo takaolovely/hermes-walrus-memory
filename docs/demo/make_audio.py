@@ -20,7 +20,7 @@ SCENES = {
     "scene2": "Walrus Memory stores memory as an append-only ledger. A correction is a new line, not an overwrite. The original stays readable forever. Two corrections in, it derives a rule that cites the exact corrections behind it.",
     "scene3": "Ask a question and every answer carries the line it came from. Ask why it changed and you get a timeline, with every correction and the reason given.",
     "scene4": "Every line carries a SHA-256 hash chained to the one before it. Change a single character and verify names the exact line that broke. No key, no server, no setup.",
-    "scene5": "Point it at Walrus Mainnet and the same lines go on chain, encrypted with Mysten SEAL before upload. Without a session, the relay proves the memory exists but cannot read a word of it. With a session, it opens and nothing is dropped. Privacy is the default, not a setting.",
+    "scene5": "Point it at Walrus Mainnet and the same lines go out over TLS and are sealed with Mysten SEAL at the relay. Without a session, the relay proves the memory exists but cannot read a word of it. With a session, it opens and nothing is dropped. Privacy is the default, not a setting.",
     "scene6": "Seven tools, ninety-three tests, zero Python dependencies. Install it, and your agent stops forgetting what it used to believe.",
 }
 

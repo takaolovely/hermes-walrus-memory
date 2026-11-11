@@ -24,8 +24,8 @@ def test_degraded_recall_is_not_reported_as_missing(monkeypatch, ledger_path):
 
     monkeypatch.setattr(walrus.WalrusClient, "snapshot", fake_snapshot)
 
-    tools.memory_observe(fact="degraded read test", topic="degraded", ledger_path=ledger_path)
-    out = _load(tools.walrus_verify(ledger_path=ledger_path))
+    tools.memory_observe(fact="degraded read test", topic="degraded")
+    out = _load(tools.walrus_verify())
 
     assert out["ok"] is True
     assert out["chain_ok"] is True

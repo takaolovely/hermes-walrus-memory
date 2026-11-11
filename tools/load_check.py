@@ -27,7 +27,11 @@ class FakeCtx:
 def main() -> int:
     tmp = tempfile.mkdtemp(prefix="walrus-load-")
     os.environ["HERMES_HOME"] = tmp
-    os.environ["WALRUS_LEDGER_PATH"] = os.path.join(tmp, "walrus-memory.log")
+    # The ledger may only live inside <HERMES_HOME>/plugin-data/<plugin>/, so
+    # point the env var there instead of straight at the temp dir root.
+    ledger_dir = os.path.join(tmp, "plugin-data", "hermes-walrus-memory")
+    os.makedirs(ledger_dir, exist_ok=True)
+    os.environ["WALRUS_LEDGER_PATH"] = os.path.join(ledger_dir, "walrus-memory.log")
     os.environ.pop("WALRUS_DELEGATE_KEY", None)
     os.environ.pop("WALRUS_ACCOUNT_ID", None)
     os.environ.pop("WALRUS_NAMESPACE", None)
@@ -82,8 +86,10 @@ def main() -> int:
     for line in diff["narrative"]:
         print("timeline  ->", line)
 
-    # memory_import against a throwaway MEMORY.md inside the temp home.
-    memory_md = Path(tmp) / "MEMORY.md"
+    # memory_import reads <hermes_home>/memories/MEMORY.md and nothing else.
+    memories_dir = Path(tmp) / "memories"
+    memories_dir.mkdir(parents=True, exist_ok=True)
+    memory_md = memories_dir / "MEMORY.md"
     memory_md.write_text(
         "VPS runs Ubuntu with UFW enabled.\n\n\u00a7\n\nUser prefers direct answers.\n",
         encoding="utf-8",

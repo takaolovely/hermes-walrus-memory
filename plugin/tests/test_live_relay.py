@@ -35,17 +35,17 @@ def test_rejected_credentials_do_not_lose_or_block_writes(monkeypatch, ledger_pa
         pytest.skip("WALRUS_DELEGATE_KEY and WALRUS_ACCOUNT_ID required for the live test")
     monkeypatch.setenv("WALRUS_HTTP_TIMEOUT", "20")
 
-    obs = _load(tools.memory_observe(fact="Auth failure should not cost a line.", topic="auth", ledger_path=ledger_path))
+    obs = _load(tools.memory_observe(fact="Auth failure should not cost a line.", topic="auth"))
     assert obs["ok"] is True
     assert obs["sync"] == "pending"
     assert "401" in obs["note"]
     # The message must name the fix, not just the status code.
     assert "not registered" in obs["note"] or "delegate" in obs["note"]
 
-    fix = _load(tools.memory_correct(fact_id=obs["id"], correction="Auth failure costs nothing.", ledger_path=ledger_path))
+    fix = _load(tools.memory_correct(fact_id=obs["id"], correction="Auth failure costs nothing."))
     assert fix["ok"] is True
 
-    verify = _load(tools.walrus_verify(ledger_path=ledger_path))
+    verify = _load(tools.walrus_verify())
     assert verify["chain_ok"] is True
     assert verify["lines"] == 2
     assert verify["pending"] == 2

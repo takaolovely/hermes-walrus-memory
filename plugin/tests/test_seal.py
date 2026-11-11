@@ -143,11 +143,11 @@ def test_pulled_lines_are_marked_synced_not_pending(monkeypatch, ledger_path, tm
     ]
     monkeypatch.setattr(walrus.WalrusClient, "snapshot", lambda self, limit=5000: _seed_remote(tmp_path, remote))
 
-    out = _load(tools.walrus_sync(action="pull", ledger_path=ledger_path))
+    out = _load(tools.walrus_sync(action="pull"))
     assert out["ok"] is True
     assert out["pulled"] == 2
 
-    records = store.LedgerStore(ledger_path).read_records()
+    records = store.LedgerStore().read_records()
     assert all(r.sync == "synced" for r in records), "pulled lines came from Walrus"
     assert ledger.verify_chain([r.encode() for r in records]).ok is True
 
@@ -164,8 +164,8 @@ def test_verify_matches_on_identity_not_resealed_hash(monkeypatch, ledger_path, 
     remote_lines = _seed_remote(tmp_path, remote)
     monkeypatch.setattr(walrus.WalrusClient, "snapshot", lambda self, limit=5000: remote_lines)
 
-    tools.walrus_sync(action="pull", ledger_path=ledger_path)
-    out = _load(tools.walrus_verify(ledger_path=ledger_path))
+    tools.walrus_sync(action="pull")
+    out = _load(tools.walrus_verify())
 
     assert out["walrus_reachable"] is True
     assert out["verified_on_walrus"] is True
@@ -182,7 +182,7 @@ def test_pull_degrades_with_structured_payload(monkeypatch, ledger_path):
 
     monkeypatch.setattr(walrus.WalrusClient, "snapshot", sealed)
 
-    out = _load(tools.walrus_sync(action="pull", ledger_path=ledger_path))
+    out = _load(tools.walrus_sync(action="pull"))
     assert out["ok"] is True, "pull is not disabled, it reports its state"
     assert out["degraded"] is True
     assert out["encrypted_blobs_found"] == 4

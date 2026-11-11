@@ -13,7 +13,7 @@ def build_memory(records):
 
 
 def test_observation_then_correction_keeps_both(ledger_path):
-    s = store.LedgerStore(ledger_path)
+    s = store.LedgerStore()
     s.append_fields(ledger.KIND_OBS, {"id": "obs-1", "topic": "tz", "text": "Jakarta", "at": "2026-01-01T00:00:00+00:00"})
     s.append_fields(
         ledger.KIND_FIX,
@@ -28,7 +28,7 @@ def test_observation_then_correction_keeps_both(ledger_path):
 
 
 def test_citation_order_is_rule_fix_obs(ledger_path):
-    s = store.LedgerStore(ledger_path)
+    s = store.LedgerStore()
     s.append_fields(ledger.KIND_OBS, {"id": "obs-1", "topic": "tz", "text": "Jakarta"})
     s.append_fields(ledger.KIND_FIX, {"id": "fix-1", "target": "obs-1", "text": "Palembang"})
     s.append_fields(ledger.KIND_RULE, {"id": "rule-1", "target": "obs-1", "text": "always confirm tz"})
@@ -37,14 +37,14 @@ def test_citation_order_is_rule_fix_obs(ledger_path):
 
 
 def test_orphan_fix_is_ignored_not_crashing(ledger_path):
-    s = store.LedgerStore(ledger_path)
+    s = store.LedgerStore()
     s.append_fields(ledger.KIND_FIX, {"id": "fix-1", "target": "missing", "text": "x"})
     mem = build_memory(s.read_records())
     assert mem.facts() == []
 
 
 def test_search_ranks_topic_matches(ledger_path):
-    s = store.LedgerStore(ledger_path)
+    s = store.LedgerStore()
     s.append_fields(ledger.KIND_OBS, {"id": "obs-1", "topic": "deployment", "text": "user deploys on Vercel"})
     s.append_fields(ledger.KIND_OBS, {"id": "obs-2", "topic": "food", "text": "user likes coffee"})
     mem = build_memory(s.read_records())
@@ -54,13 +54,13 @@ def test_search_ranks_topic_matches(ledger_path):
 
 
 def test_search_empty_query_returns_facts(ledger_path):
-    s = store.LedgerStore(ledger_path)
+    s = store.LedgerStore()
     s.append_fields(ledger.KIND_OBS, {"id": "obs-1", "topic": "a", "text": "x"})
     assert len(build_memory(s.read_records()).search("")) == 1
 
 
 def test_conflicts_detected_for_same_topic(ledger_path):
-    s = store.LedgerStore(ledger_path)
+    s = store.LedgerStore()
     s.append_fields(ledger.KIND_OBS, {"id": "obs-1", "topic": "editor", "text": "uses vim"})
     s.append_fields(ledger.KIND_OBS, {"id": "obs-2", "topic": "editor", "text": "uses VS Code"})
     conflicts = build_memory(s.read_records()).conflicts()
@@ -70,7 +70,7 @@ def test_conflicts_detected_for_same_topic(ledger_path):
 
 
 def test_no_conflict_when_correction_reconciles(ledger_path):
-    s = store.LedgerStore(ledger_path)
+    s = store.LedgerStore()
     s.append_fields(ledger.KIND_OBS, {"id": "obs-1", "topic": "editor", "text": "uses vim"})
     s.append_fields(ledger.KIND_OBS, {"id": "obs-2", "topic": "editor", "text": "uses VS Code"})
     s.append_fields(ledger.KIND_FIX, {"id": "fix-1", "target": "obs-2", "text": "uses vim"})
@@ -79,7 +79,7 @@ def test_no_conflict_when_correction_reconciles(ledger_path):
 
 
 def test_timeline_is_chronological(ledger_path):
-    s = store.LedgerStore(ledger_path)
+    s = store.LedgerStore()
     s.append_fields(ledger.KIND_OBS, {"id": "obs-1", "topic": "t", "text": "first", "at": "2026-03-01T00:00:00+00:00"})
     s.append_fields(
         ledger.KIND_FIX,
@@ -92,7 +92,7 @@ def test_timeline_is_chronological(ledger_path):
 
 
 def test_timeline_unknown_fact_is_empty(ledger_path):
-    s = store.LedgerStore(ledger_path)
+    s = store.LedgerStore()
     assert build_memory(s.read_records()).timeline("nope") == []
 
 
@@ -117,7 +117,7 @@ def test_dedupe_keeps_first():
 
 
 def test_as_dict_shape(ledger_path):
-    s = store.LedgerStore(ledger_path)
+    s = store.LedgerStore()
     s.append_fields(ledger.KIND_OBS, {"id": "obs-1", "topic": "t", "text": "x", "at": "2026-01-01T00:00:00+00:00"})
     payload = build_memory(s.read_records()).get("obs-1").as_dict()
     assert set(payload) >= {"id", "topic", "text", "citation", "line_hash", "observed_at"}
