@@ -114,9 +114,10 @@ POST /api/recall  without x-seal-session
 -> {"results": [], "dropped_count": 7, "degraded": true}
 ```
 
-**VO:** "Point it at Walrus Mainnet and the same lines go on chain, encrypted with
-Mysten SEAL before upload. Without a session key the relay can prove the memory
-exists but cannot read a word of it. Privacy is the default, not a setting."
+**VO:** "Point it at Walrus Mainnet and the same lines go out over TLS and are
+sealed with Mysten SEAL at the relay. Without a session key the relay can prove
+the memory exists but cannot read a word of it. Privacy is the default, not a
+setting."
 
 ---
 

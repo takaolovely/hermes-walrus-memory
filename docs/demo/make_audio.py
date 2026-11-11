@@ -29,8 +29,8 @@ SUBS = {
     "scene2": [("A correction is a new line, not an overwrite.", 0.0), ("The original stays readable forever.", 3.9), ("Two corrections in, it derives a rule that cites them.", 6.9)],
     "scene3": [("Every answer carries the line it came from.", 0.0), ("Ask why, and you get a timeline.", 3.6)],
     "scene4": [("Each line hashes the one before it.", 0.0), ("Edit one character and verify names the line that broke.", 3.2)],
-    "scene5": [("The same lines go to Walrus Mainnet.", 0.0), ("Sealed before upload. Unreadable without a session.", 3.4), ("With a session it opens, and nothing is dropped.", 7.8)],
-    "scene6": [("Seven tools. Ninety-three tests. Zero Python dependencies.", 0.0), ("Your agent stops forgetting what it used to believe.", 4.4)],
+    "scene5": [("The same lines go to Walrus Mainnet.", 0.0), ("Sent over TLS, sealed at the relay. Unreadable without a session.", 3.4), ("With a session it opens, and nothing is dropped.", 7.8)],
+    "scene6": [("Seven tools. Ninety-nine tests. Zero Python dependencies.", 0.0), ("Your agent stops forgetting what it used to believe.", 4.4)],
 }
 
 

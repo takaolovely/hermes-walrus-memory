@@ -335,9 +335,11 @@ class WalrusDegraded(WalrusError):
 
 # -- SEAL session ----------------------------------------------------------
 #
-# Walrus Memory encrypts every blob with Mysten SEAL before uploading it. The
-# relayer can find a matching line but cannot return its plaintext without an
-# ``x-seal-session`` credential, so recall comes back degraded with a
+# Walrus Memory encrypts every blob with Mysten SEAL. The sealing happens at
+# the relay, which receives the line over TLS and seals it before storing it,
+# so the plaintext is never sealed on this machine.
+# The relayer can find a matching line but cannot return its plaintext without
+# an ``x-seal-session`` credential, so recall comes back degraded with a
 # dropped_count until one is supplied.
 #
 # A session is not a signature over a fixed string: SessionKey.create performs
